@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Mini API Dashboard — Robust</title>
+<style>
+  :root{--bg:#0f1724;--muted:#94a3b8;--accent:#d6a5ff;--glass:rgba(255,255,255,0.03);--radius:12px}
+  html,body{height:100%;margin:0;background:linear-gradient(180deg,#071126 0%,#081426 100%);color:#e6eef8;font-family:Inter,system-ui,Roboto,Arial}
+  header{padding:18px} h1{margin:0;font-size:20px} .container{padding:18px;max-width:1200px;margin:0 auto}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+  .card{background:rgba(255,255,255,0.02);border-radius:var(--radius);padding:12px;min-height:160px;display:flex;flex-direction:column;gap:8px;box-shadow:0 6px 18px rgba(0,0,0,0.6)}
+  .controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  input,select{background:var(--glass);border:1px solid rgba(255,255,255,0.03);padding:8px;border-radius:8px;color:inherit}
+  button{background:linear-gradient(90deg,var(--accent),#7dd3fc);border:none;padding:8px 10px;border-radius:9px;color:#071126;cursor:pointer}
+  .output{flex:1;overflow:auto;padding:6px;border-radius:8px;background:rgba(0,0,0,0.03);font-size:13px}
+  .small{font-size:12px;color:var(--muted)} img.responsive{max-width:100%;height:auto;border-radius:8px;display:block;margin-top:6px}
+  .err{color:#ff9b9b;font-weight:700}
+  .meta{font-size:11px;color:#9fb0c8}
+</style>
+</head>
+<body>
+  <header><h1>Mini API Dashboard — Robust</h1><div class="meta">If APIs fail locally, run via Live Server or GitHub Pages (don’t open as file://)</div></header>
+  <main class="container">
+    <div class="grid">
+      <!-- Dog -->
+      <section class="card">
+        <h2>🐶 Dog</h2>
+        <div class="controls"><button id="dogBtn">Fetch Dog</button><div class="small">dog.ceo</div></div>
+        <div class="output" id="dogOut"><div class="small">Click to fetch a dog image.</div></div>
+      </section>
+
+      <!-- Cat -->
+      <section class="card">
+        <h2>🐱 Cat (robust)</h2>
+        <div class="controls"><button id="catBtn">Fetch Cat</button><div class="small">tries: cataas → thecatapi → aws.random.cat</div></div>
+        <div class="output" id="catOut"><div class="small">Click to fetch a cat image. Errors/details will show here.</div></div>
+      </section>
+
+      <!-- Weather -->
+      <section class="card">
+        <h2>🌤 Weather</h2>
+        <div class="controls"><input id="cityInput" placeholder="City (e.g., London)"><button id="weatherBtn">Get Weather</button></div>
+        <div class="output" id="weatherOut"><div class="small">Enter city and click.</div></div>
+      </section>
+
+      <!-- Currency -->
+      <section class="card">
+        <h2>💱 Currency USD → EUR (robust)</h2>
+        <div class="controls"><button id="currencyBtn">Get Rate</button><div class="small">tries: exchangerate.host → frankfurter</div></div>
+        <div class="output" id="currencyOut"><div class="small">Click to fetch rate. Errors/details will show here.</div></div>
+      </section>
+
+      <!-- GitHub -->
+      <section class="card">
+        <h2>🧑‍💻 GitHub</h2>
+        <div class="controls"><input id="ghUser" placeholder="username (e.g., octocat)"><button id="ghBtn">Fetch</button></div>
+        <div class="output" id="ghOut"><div class="small">Enter username and click.</div></div>
+      </section>
+
+      <!-- Joke -->
+      <section class="card">
+        <h2>😂 Joke</h2>
+        <div class="controls"><select id="jokeType"><option>Any</option><option>Programming</option><option>Misc</option><option>Dark</option></select><button id="jokeBtn">Tell</button></div>
+        <div class="output" id="jokeOut"><div class="small">Choose category.</div></div>
+      </section>
+
+      <!-- Pokémon -->
+      <section class="card">
+        <h2>🔮 Pokémon</h2>
+        <div class="controls"><input id="pokeInput" placeholder="name or id (pikachu)"><button id="pokeBtn">Fetch</button></div>
+        <div class="output" id="pokeOut"><div class="small">Try "pikachu", "25".</div></div>
+      </section>
+    </div>
+  </main>
+
+<script>
+document.addEventListener('DOMContentLoaded', ()=>{
+
+  const setLoading = (el,msg='Loading...') => el.innerHTML = `<div class="small">${msg}</div>`;
+  const setError = (el,msg,detail) => el.innerHTML = `<div class="err">${msg}</div>${detail?`<pre style="margin-top:6px;color:#cfcfcf;font-size:12px">${detail}</pre>`:''}`;
+
+  // small fetch helper with timeout
+  const fetchWithTimeout = (url, opts={}, timeout=10000) => {
+    return new Promise((resolve, reject)=>{
+      const timer = setTimeout(()=>reject(new Error('Timeout')), timeout);
+      fetch(url, Object.assign({mode:'cors',cache:'no-store'}, opts))
+        .then(r=>{ clearTimeout(timer); if(!r.ok) { const err = new Error('HTTP '+r.status+' '+r.statusText); err.status=r.status; throw err; } return r.json(); })
+        .then(json=>resolve(json))
+        .catch(err=>{ clearTimeout(timer); reject(err); });
+    });
+  };
+
+  // 1) Dog - simple
+  document.getElementById('dogBtn').addEventListener('click', async ()=>{
+    const out = document.getElementById('dogOut'); setLoading(out,'Fetching dog image...');
+    try{
+      const data = await fetchWithTimeout('https://dog.ceo/api/breeds/image/random');
+      // dog.ceo returns { message: "url", status: "success" }
+      const url = data?.message;
+      if(!url) throw new Error('Unexpected response: ' + JSON.stringify(data));
+      out.innerHTML = `<img class="responsive" src="${url}" alt="dog"><div class="small">Source: dog.ceo</div>`;
+    }catch(err){
+      setError(out,'Dog fetch failed',err.message || String(err));
+      console.error('Dog error', err);
+    }
+  });
+
+  // 2) Cat - try multiple providers sequentially
+  async function tryCatProviders(){
+    const providers = [
+      { name:'cataas', url:'https://cataas.com/cat?json=true', transform: d => d && d.url ? `https://cataas.com${d.url}` : null },
+      { name:'thecatapi', url:'https://api.thecatapi.com/v1/images/search', transform: d => Array.isArray(d) && d[0]?.url ? d[0].url : null },
+      { name:'random.cat', url:'https://aws.random.cat/meow', transform: d => d?.file ?? null }
+    ];
+    let lastErr = null;
+    for(const p of providers){
+      try{
+        const data = await fetchWithTimeout(p.url);
+        const url = p.transform(data);
+        if(url) return { url, provider: p.name, raw: data };
+      }catch(err){
+        lastErr = `${p.name}: ${err.message || String(err)}`;
+        console.warn('Cat provider failed', p.name, err);
+      }
+    }
+    throw new Error('All cat providers failed. Last error: ' + lastErr);
+  }
+
+  document.getElementById('catBtn').addEventListener('click', async ()=>{
+    const out = document.getElementById('catOut'); setLoading(out,'Fetching cat image (multiple providers)...');
+    try{
+      const res = await tryCatProviders();
+      out.innerHTML = `<img class="responsive" src="${res.url}" alt="cat"><div class="small">Source: ${res.provider}</div><pre style="font-size:11px;color:#a9c0d9;margin-top:6px">${JSON.stringify(res.raw,null,2)}</pre>`;
+    }catch(err){
+      setError(out,'Cat fetch failed', err.message || String(err));
+      console.error('Cat error', err);
+    }
+  });
+
+  // 3) Weather
+  document.getElementById('weatherBtn').addEventListener('click', async ()=>{
+    const out = document.getElementById('weatherOut'); const city = document.getElementById('cityInput').value.trim();
+    if(!city){ setError(out,'Enter city name'); return; }
+    setLoading(out,'Looking up city...');
+    try{
+      const geo = await fetchWithTimeout(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1`);
+      if(!geo.results || geo.results.length===0) { setError(out,'City not found'); return; }
+      const loc = geo.results[0];
+      setLoading(out,'Fetching forecast for ' + loc.name + '...');
+      const weather = await fetchWithTimeout(`https://api.open-meteo.com/v1/forecast?latitude=${loc.latitude}&longitude=${loc.longitude}&current_weather=true`);
+      const cw = weather.current_weather;
+      out.innerHTML = `<div><strong>${loc.name}, ${loc.country}</strong></div><div class="small">Lat ${loc.latitude.toFixed(3)} • Lon ${loc.longitude.toFixed(3)}</div><div style="margin-top:8px"><div><strong>${cw.temperature}°C</strong></div><div class="small">Wind ${cw.windspeed} km/h • Dir ${cw.winddirection}°</div></div>`;
+    }catch(err){ setError(out,'Weather failed', err.message || String(err)); console.error('Weather error', err); }
+  });
+
+  // 4) Currency - try primary then fallback
+  async function tryCurrency(){
+    // primary: exchangerate.host convert, fallback frankfurter
+    const endpoints = [
+      { name:'exchangerate.host (convert)', url:'https://api.exchangerate.host/convert?from=USD&to=EUR' , extractor: d => d?.result ?? null },
+      { name:'exchangerate.host (latest)', url:'https://api.exchangerate.host/latest?base=USD&symbols=EUR', extractor: d => d?.rates?.EUR ?? null },
+      { name:'Frankfurter', url:'https://api.frankfurter.app/latest?from=USD&to=EUR', extractor: d => d?.rates?.EUR ?? null }
+    ];
+    let lastErr = null;
+    for(const ep of endpoints){
+      try{
+        const d = await fetchWithTimeout(ep.url);
+        const rate = ep.extractor(d);
+        if(rate !== null && rate !== undefined) return { rate:Number(rate), source:ep.name, raw:d };
+      }catch(err){
+        lastErr = `${ep.name}: ${err.message || String(err)}`;
+        console.warn('Currency endpoint failed', ep.name, err);
+      }
+    }
+    throw new Error('All currency endpoints failed. Last error: ' + lastErr);
+  }
+
+  document.getElementById('currencyBtn').addEventListener('click', async ()=>{
+    const out = document.getElementById('currencyOut'); setLoading(out,'Fetching USD → EUR (multiple sources)...');
+    try{
+      const res = await tryCurrency();
+      out.innerHTML = `<div style="font-size:18px"><strong>1 USD = ${res.rate.toFixed(4)} EUR</strong></div><div class="small">Source: ${res.source}</div><pre style="font-size:11px;color:#a9c0d9;margin-top:6px">${JSON.stringify(res.raw,null,2)}</pre>`;
+    }catch(err){
+      setError(out,'Currency fetch failed', err.message || String(err)); console.error('Currency error', err);
+    }
+  });
+
+  // 5) GitHub
+  document.getElementById('ghBtn').addEventListener('click', async ()=>{
+    const out = document.getElementById('ghOut'); const user = document.getElementById('ghUser').value.trim();
+    if(!user){ setError(out,'Enter GitHub username'); return; }
+    setLoading(out,'Fetching GitHub user...');
+    try{
+      const data = await fetchWithTimeout(`https://api.github.com/users/${encodeURIComponent(user)}`);
+      if(data?.message) { setError(out,'User not found or API limit'); return; }
+      out.innerHTML = `<div style="display:flex;gap:10px;align-items:center"><img src="${data.avatar_url}" width="64" style="border-radius:8px"><div><strong>${data.name||data.login}</strong><div class="small">${data.bio||''}</div></div></div><div class="small">Repos: ${data.public_repos} • Followers: ${data.followers}</div><div style="margin-top:6px"><a href="${data.html_url}" target="_blank">View on GitHub</a></div>`;
+    }catch(err){ setError(out,'GitHub fetch failed', err.message || String(err)); console.error('GitHub error', err); }
+  });
+
+  // 6) Joke
+  document.getElementById('jokeBtn').addEventListener('click', async ()=>{
+    const out = document.getElementById('jokeOut'); const cat = document.getElementById('jokeType').value;
+    setLoading(out,'Fetching joke...');
+    try{
+      const data = await fetchWithTimeout(`https://v2.jokeapi.dev/joke/${encodeURIComponent(cat)}?blacklistFlags=nsfw,religious,political,sexist,explicit`);
+      if(data.type === 'single') out.innerHTML = `<div>${data.joke}</div><div class
+      
+
+
+        
+
+
+
+
+
+
