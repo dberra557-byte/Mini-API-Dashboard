@@ -1,25 +1,87 @@
-# Mini-API-Dashboard
-API Dashboard Project
+API Mini Apps Dashboard
 
-This project is a single-page dashboard featuring 8 mini apps, each using a different real-world public API. The goal of this assignment was to practice using fetch(), async/await, API response handling, and DOM manipulation in JavaScript.
+A single-page web dashboard featuring 8 mini apps that fetch live data from public APIs. Built as a software engineering school project, this dashboard demonstrates working with APIs, asynchronous JavaScript (fetch), and dynamic DOM updates.
+
+
+---
 
 Features
 
-🐶 Random Dog Image (Dog API)
+🐶 Random Dog – displays a random dog image (clickable)
 
-🐱 Random Cat Image (CATAAS API)
+🐱 Random Cat – displays a random cat image (clickable)
 
-🌤️ Weather for Any City (Open-Meteo + Geocoding API)
+🌤️ Weather – shows current weather in New York
 
-💱 Currency Conversion USD → EUR (Exchangerate Host)
+💱 Crypto Prices – displays Bitcoin and Ethereum prices in USD
 
-🎬 Trending Movies (TMDB API)
+🎬 Popular Shows – lists top 5 shows from TVMaze (clickable)
 
-👤 GitHub User Lookup (GitHub API)
+🧑‍💻 GitHub User – search for a GitHub username and view profile info (clickable)
 
-😂 Random Joke (JokeAPI)
+😂 Random Joke – displays a random joke
 
-🎮 Pokémon Search (PokeAPI)
+📚 Random Advice – fetches a random piece of advice (clickable)
+
+
+
+---
+
+How to Use
+
+1. Clone or download the repository
+
+
+2. Open index.html in your browser
+
+
+3. All apps will load automatically; some require user input (GitHub search)
+
+
+4. Click on images or links where available for more information
+
+
+
+
+---
+
+Tech Stack
+
+HTML5 & CSS3
+
+JavaScript (Fetch API)
+
+Public APIs (no API keys required)
+
+
+
+---
+
+APIs Used
+
+Dog CEO API – https://dog.ceo/api/breeds/image/random
+
+The Cat API – https://api.thecatapi.com/v1/images/search
+
+Open-Meteo – https://api.open-meteo.com/
+
+CoinGecko – https://api.coingecko.com/api/v3/simple/price
+
+TVMaze – https://api.tvmaze.com/shows
+
+GitHub REST API – https://api.github.com/users/
+
+JokeAPI – https://v2.jokeapi.dev/joke/Any
+
+Advice Slip API – https://api.adviceslip.com/advice
+
+
+
+---
+
+License
+
+This project is for educational purposes and free to use.
 
 
 What It Does
